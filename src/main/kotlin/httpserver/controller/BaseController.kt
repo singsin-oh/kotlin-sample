@@ -2,9 +2,8 @@ import com.singsin.studio.httpserver.response.HTTPResponse
 import com.sun.net.httpserver.HttpExchange
 import java.nio.charset.StandardCharsets
 
-abstract class BaseController {
-
-    protected fun writeJson(
+open class BaseController {
+    private fun writeJson(
         exchange: HttpExchange,
         status: Int,
         response: HTTPResponse
@@ -34,7 +33,7 @@ abstract class BaseController {
         }
     }
 
-    protected fun writeError(
+    private fun writeError(
         exchange: HttpExchange,
         status: Int,
         message: String
@@ -45,4 +44,39 @@ abstract class BaseController {
             HTTPResponse(status, message, false)
         )
     }
+
+    protected fun writeHtml(
+        exchange: HttpExchange,
+        status: Int,
+        html: String
+    ) {
+        val bytes = html.toByteArray(StandardCharsets.UTF_8)
+        exchange.responseHeaders.add("Content-Type", "text/html; charset=utf-8")
+        exchange.sendResponseHeaders(status, bytes.size.toLong())
+        exchange.responseBody.use {
+            it.write(bytes)
+        }
+    }
+
+    protected fun writeHtmlFile(
+        exchange: HttpExchange,
+        status: Int,
+        resourcePath: String
+    ) {
+        val stream = javaClass.getResourceAsStream(resourcePath)
+        if (stream == null) {
+            writeError(exchange, 404, "File not found: $resourcePath")
+            return
+        }
+
+        val bytes = stream.readBytes()
+        stream.close()
+
+        exchange.responseHeaders.add("Content-Type", "text/html; charset=utf-8")
+        exchange.sendResponseHeaders(status, bytes.size.toLong())
+        exchange.responseBody.use {
+            it.write(bytes)
+        }
+    }
+
 }

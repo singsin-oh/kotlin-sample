@@ -43,7 +43,7 @@ bin/
 
 ### Mac OS ###
 .DS_Store
-
+work
 # Compiled class file
 *.class
 
